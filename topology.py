@@ -257,3 +257,32 @@ if __name__ == "__main__":
     threading.Thread(target=send_heartbeat, daemon=True).start()  # 🔥 FALTAVA ISSO
 
     app.run(host="0.0.0.0", port=PORT)
+junin@Barcelona:~/drones$ cat topology.py
+from mininet.net import Mininet
+from mininet.topo import Topo
+from mininet.node import OVSBridge
+from mininet.cli import CLI
+
+class DroneTopo(Topo):
+
+    def build(self):
+
+        switch = self.addSwitch('s1')
+
+        for i in range(1, 11):
+            host = self.addHost(f'h{i}')
+            self.addLink(host, switch)
+
+topo = DroneTopo()
+
+net = Mininet(
+    topo=topo,
+    switch=OVSBridge,
+    controller=None
+)
+
+net.start()
+
+CLI(net)
+
+net.stop()
