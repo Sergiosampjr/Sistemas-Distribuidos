@@ -1,237 +1,388 @@
-# 🚀 Sistema Distribuído com RAFT + Flask + Mininet
+# Sistemas Distribuídos – Consenso entre Drones
 
-Este projeto implementa um sistema distribuído baseado no algoritmo de consenso **RAFT**, utilizando **Python** e **Flask**, com suporte para execução local e em rede simulada com **Mininet**.
+## Descrição
 
----
+Projeto desenvolvido para a disciplina de Sistemas Distribuídos utilizando Python, Flask e Mininet.
 
-# 📌 Requisitos
+O objetivo é simular uma rede de drones distribuídos e implementar algoritmos de consenso capazes de tolerar diferentes tipos de falhas:
 
-## 🔹 Windows / Linux
-
-* Python 3.8+
-* pip
-* Git (opcional)
-
-## 🔹 Linux (para Mininet)
-
-* Ubuntu 20.04+ (ou WSL2)
-* Mininet instalado
+* Falhas de Crash
+* Falhas de Omissão
+* Falhas de Temporização
+* Falhas Bizantinas
 
 ---
 
-# ⚙️ Instalação
+# Tecnologias Utilizadas
 
-## 1. Clonar o projeto
+* Python 3
+* Flask
+* Requests
+* Mininet
+* Ubuntu 20.04+
 
-```bash
-git clone <url-do-repositorio>
-cd <nome-do-projeto>
+---
+
+# Estrutura do Projeto
+
+```text
+Sistemas-Distribuidos/
+│
+├── drone.py
+├── topology.py
+│
+├── bft_drone.py
+├── gerar_bft.py
+├── comandos_bft_auto.txt
+├── teste_bft_10.txt
+│
+├── lsp_drone.py
+├── gerar_lsp.py
+├── comandos_lsp_auto.txt
+├── teste_lsp_10.txt
+│
+├── README.md
+└── venv/
 ```
 
-## 2. Criar ambiente virtual
+---
 
-### ▶️ Windows
+# Instalação
+
+## 1. Clonar o Repositório
 
 ```bash
-python -m venv venv
-venv\Scripts\activate
+git clone <URL_DO_REPOSITORIO>
+cd Sistemas-Distribuidos
 ```
 
-### ▶️ Linux
+---
+
+## 2. Criar Ambiente Virtual
 
 ```bash
 python3 -m venv venv
+```
+
+Ativar:
+
+```bash
 source venv/bin/activate
 ```
 
 ---
 
-## 3. Instalar dependências
+## 3. Instalar Dependências
 
 ```bash
 pip install flask requests
 ```
 
----
-
-# 🖥️ Execução LOCAL (sem Mininet)
-
-## ▶️ Passo 1: Abrir 3 terminais
-
----
-
-## ▶️ Passo 2: Executar os drones
-
-### Terminal 1
+Verificar:
 
 ```bash
-python drone.py drone1 5001 http://127.0.0.1:5002 http://127.0.0.1:5003
+pip list
 ```
 
-### Terminal 2
+---
+
+## 4. Instalar o Mininet
+
+Remover versões antigas:
 
 ```bash
-python drone.py drone2 5002 http://127.0.0.1:5001 http://127.0.0.1:5003
+sudo apt remove mininet
 ```
 
-### Terminal 3
+Instalar versão oficial:
 
 ```bash
-python drone.py drone3 5003 http://127.0.0.1:5001 http://127.0.0.1:5002
+git clone https://github.com/mininet/mininet.git mininet-src
+
+cd mininet-src
+
+sudo ./util/install.sh -a
 ```
 
 ---
 
-## ✅ Resultado esperado
+# Topologia
 
-* Um drone será eleito líder:
+A topologia utilizada cria uma rede com até 10 drones.
 
-```
-VIROU LÍDER 🚀
-```
-
-* Os outros receberão heartbeat:
-
-```
-heartbeat de droneX
-```
-
----
-
-## 🧪 Teste de falha
-
-1. Pare o líder (CTRL + C)
-2. Observe:
-
-```
-novo líder será eleito automaticamente
-```
-
----
-
-# 🌐 Execução com Mininet (Linux)
-
----
-
-## ▶️ 1. Instalar Mininet
+Executar:
 
 ```bash
-sudo apt update
-sudo apt install mininet
+sudo PYTHONPATH=/home/sergio_nunes/Documentos/GitHub/Sistemas-Distribuidos/mininet-src python3 topology.py
 ```
 
----
+Teste de conectividade:
 
-## ▶️ 2. Criar arquivo `network.py`
-
-```python
-from mininet.net import Mininet
-from mininet.topo import SingleSwitchTopo
-from mininet.cli import CLI
-
-topo = SingleSwitchTopo(3)
-net = Mininet(topo)
-net.start()
-
-CLI(net)
-net.stop()
-```
-
----
-
-## ▶️ 3. Iniciar o Mininet
-
-```bash
-sudo python3 network.py
-```
-
----
-
-## ▶️ 4. Testar conectividade
-
-```bash
+```text
 mininet> pingall
 ```
 
 Resultado esperado:
 
-```
-0% packet loss
-```
-
----
-
-## ▶️ 5. Abrir terminais dos hosts
-
-```bash
-mininet> xterm h1 h2 h3
+```text
+*** Results: 0% dropped
 ```
 
 ---
 
-## ▶️ 6. Executar os drones
+# Algoritmo 1 – Raft
 
-### h1
+Arquivo:
 
-```bash
-python3 drone.py drone1 5000 http://10.0.0.2:5000 http://10.0.0.3:5000
+```text
+drone.py
 ```
 
-### h2
+Objetivo:
+
+* Eleição de líder
+* Tolerância a falhas de crash
+* Tolerância a falhas de omissão
+* Tolerância a falhas de temporização
+
+Exemplo:
 
 ```bash
-python3 drone.py drone2 5000 http://10.0.0.1:5000 http://10.0.0.3:5000
-```
-
-### h3
-
-```bash
-python3 drone.py drone3 5000 http://10.0.0.1:5000 http://10.0.0.2:5000
+python3 drone.py drone1 5001
 ```
 
 ---
 
-## ✅ Resultado esperado
+# Algoritmo 2 – BFT/PBFT
 
-* Eleição de líder automática
-* Comunicação entre nós via rede simulada
-* Heartbeats funcionando corretamente
+Arquivo:
+
+```text
+bft_drone.py
+```
+
+Objetivo:
+
+* Consenso Bizantino
+* Fases PRE-PREPARE
+* PREPARE
+* COMMIT
 
 ---
 
-## 💥 Teste de falha de rede
+## Gerar Cenário
 
-No Mininet:
+Exemplo:
 
 ```bash
-mininet> link h1 s1 down
+python3 gerar_bft.py 10 3
+```
+
+Resultado:
+
+```text
+10 drones
+1 bizantino (drone3)
+```
+
+Arquivo gerado:
+
+```text
+comandos_bft_auto.txt
+```
+
+---
+
+## Executar Cenário
+
+Dentro do Mininet:
+
+```text
+source comandos_bft_auto.txt
+```
+
+---
+
+## Executar Teste
+
+```text
+source teste_bft_10.txt
+```
+
+---
+
+## Regra de Tolerância
+
+Para tolerar m nós bizantinos:
+
+```text
+N ≥ 3m + 1
+```
+
+Exemplos:
+
+```text
+1 bizantino -> mínimo 4 nós
+2 bizantinos -> mínimo 7 nós
+3 bizantinos -> mínimo 10 nós
+```
+
+---
+
+# Algoritmo 3 – Lamport-Shostak-Pease
+
+Arquivo:
+
+```text
+lsp_drone.py
+```
+
+Objetivo:
+
+Resolver o problema dos Generais Bizantinos utilizando votação majoritária.
+
+---
+
+## Gerar Cenário
+
+Exemplo:
+
+```bash
+python3 gerar_lsp.py 10 3
+```
+
+Resultado:
+
+```text
+Drones: 10
+Bizantinos: [3]
+```
+
+Arquivo gerado:
+
+```text
+comandos_lsp_auto.txt
+```
+
+---
+
+## Executar Cenário
+
+Dentro do Mininet:
+
+```text
+source comandos_lsp_auto.txt
+```
+
+---
+
+## Executar Teste
+
+```text
+source teste_lsp_10.txt
+```
+
+---
+
+## Exemplo de Resultado
+
+Drone bizantino:
+
+```text
+drone3 -> leader=fake_drone3
+```
+
+Resultado final:
+
+```json
+{
+  "decided_value": "leader=drone1",
+  "votes": {
+    "leader=drone1": 8,
+    "leader=fake_drone3": 1
+  }
+}
+```
+
+Decisão correta:
+
+```text
+leader=drone1
+```
+
+---
+
+# Cenários Testados
+
+## BFT
+
+### Cenário 1
+
+```text
+5 drones
+1 bizantino
+```
+
+### Cenário 2
+
+```text
+10 drones
+1 bizantino
+```
+
+### Cenário 3
+
+```text
+10 drones
+3 bizantinos
+```
+
+### Cenário 4
+
+```text
+10 drones
+4 bizantinos
 ```
 
 Resultado esperado:
 
-* Novo líder será eleito automaticamente
+```text
+Violação da condição N ≥ 3m + 1
+```
 
 ---
 
-# 🧠 Tecnologias utilizadas
+## Lamport-Shostak-Pease
 
-* Python
-* Flask
-* RAFT (Leader Election + Heartbeat)
-* Mininet
+### Cenário 1
 
----
+```text
+10 drones
+1 bizantino
+```
 
-# 📌 Funcionalidades
+Resultado:
 
-* Eleição de líder (RAFT)
-* Comunicação entre nós via HTTP
-* Heartbeat para manutenção do líder
-* Tolerância a falhas
-* Simulação de rede com Mininet
+```text
+Consenso alcançado
+```
 
 ---
 
-# 👨‍💻 Autor
+# Limpeza do Ambiente
 
-Desenvolvido para disciplina de Sistemas Distribuídos.
+Antes de iniciar novos testes:
+
+```bash
+sudo mn -c
+```
+
+---
+
+# Autor
+
+Sergio Nunes
+
+Curso de Ciência da Computação – UECE
+
+Disciplina: Sistemas Distribuídos

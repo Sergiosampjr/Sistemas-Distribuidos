@@ -1,0 +1,6 @@
+h1 curl http://10.0.0.1:5001/start_bft
+h2 curl http://10.0.0.2:5002
+h4 curl http://10.0.0.4:5004
+h5 curl http://10.0.0.5:5005
+h7 curl http://10.0.0.7:5007
+h10 curl http://10.0.0.10:5010
