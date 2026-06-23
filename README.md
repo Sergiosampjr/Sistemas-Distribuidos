@@ -1,310 +1,496 @@
-# Sistemas Distribuídos – Consenso entre Drones
+# Trabalho Prático – Fundamentos de Sistemas Distribuídos
 
-## Descrição
+## Autor
 
-Projeto desenvolvido para a disciplina de Sistemas Distribuídos utilizando Python, Flask e Mininet.
-
-O objetivo é simular uma rede de drones distribuídos e implementar algoritmos de consenso capazes de tolerar diferentes tipos de falhas:
-
-* Falhas de Crash
-* Falhas de Omissão
-* Falhas de Temporização
-* Falhas Bizantinas
+Sergio Nunes
+Universidade Estadual do Ceará (UECE)
+Disciplina: Fundamentos de Sistemas Distribuídos
 
 ---
 
-# Tecnologias Utilizadas
+# Descrição
 
-* Python 3
-* Flask
-* Requests
-* Mininet
-* Ubuntu 20.04+
+Este projeto implementa uma rede de drones virtuais utilizando Python, Flask e Mininet.
+
+Foram implementados três algoritmos de consenso distribuído:
+
+* Raft
+* PBFT (Practical Byzantine Fault Tolerance)
+* Lamport-Shostak-Pease (LSP)
+
+O objetivo é simular diferentes tipos de falhas em sistemas distribuídos:
+
+* falhas de crash;
+* falhas por omissão;
+* falhas de temporização;
+* falhas bizantinas.
 
 ---
 
-# Estrutura do Projeto
+# Estrutura Principal
 
 ```text
-Sistemas-Distribuidos/
-│
-├── drone.py
-├── topology.py
-│
-├── bft_drone.py
-├── gerar_bft.py
-├── comandos_bft_auto.txt
-├── teste_bft_10.txt
-│
-├── lsp_drone.py
-├── gerar_lsp.py
-├── comandos_lsp_auto.txt
-├── teste_lsp_10.txt
-│
-├── README.md
-└── venv/
+drone.py             -> Implementação do Raft
+bft_drone.py         -> Implementação do PBFT
+lsp_drone.py         -> Implementação do Lamport-Shostak-Pease
+
+topology.py          -> Topologia da rede no Mininet
+
+gerar_raft.py        -> Gera comandos para executar o Raft
+gerar_bft.py         -> Gera comandos para executar o PBFT
+gerar_lsp.py         -> Gera comandos para executar o LSP
+
+comandos_raft_auto.txt
+comandos_bft_auto.txt
+comandos_lsp_auto.txt
+
+teste_raft_auto.txt
+teste_bft_10.txt
+teste_lsp_10.txt
 ```
 
 ---
 
-# Instalação
+# Pré-requisitos
 
-## 1. Clonar o Repositório
-
-```bash
-git clone <URL_DO_REPOSITORIO>
-cd Sistemas-Distribuidos
-```
-
----
-
-## 2. Criar Ambiente Virtual
-
-```bash
-python3 -m venv venv
-```
-
-Ativar:
-
-```bash
-source venv/bin/activate
-```
-
----
-
-## 3. Instalar Dependências
+Instalar dependências Python:
 
 ```bash
 pip install flask requests
 ```
 
-Verificar:
+Ativar o ambiente virtual:
 
 ```bash
-pip list
+source venv/bin/activate
 ```
 
----
-
-## 4. Instalar o Mininet
-
-Remover versões antigas:
+Antes de cada teste, limpar o Mininet:
 
 ```bash
-sudo apt remove mininet
+sudo mn -c
 ```
 
-Instalar versão oficial:
-
-```bash
-git clone https://github.com/mininet/mininet.git mininet-src
-
-cd mininet-src
-
-sudo ./util/install.sh -a
-```
-
----
-
-# Topologia
-
-A topologia utilizada cria uma rede com até 10 drones.
-
-Executar:
+Executar a topologia:
 
 ```bash
 sudo PYTHONPATH=/home/sergio_nunes/Documentos/GitHub/Sistemas-Distribuidos/mininet-src python3 topology.py
 ```
 
-Teste de conectividade:
+Após executar esse comando, o terminal deve entrar no modo:
 
 ```text
-mininet> pingall
+mininet>
+```
+
+Os comandos `source`, `h1`, `h2`, `h3`, etc. devem ser executados dentro do prompt do Mininet.
+
+---
+
+# Cenários Solicitados pelo Professor
+
+O trabalho exige a execução dos seguintes cenários:
+
+1. 5 drones com falhas crash, omissão e temporização, variando de 1 a 3 nós com falha.
+2. 10 drones com falhas crash, omissão e temporização, variando de 1 a 6 nós com falha.
+3. 5 drones com falhas bizantinas, variando de 1 a 2 nós bizantinos.
+4. 10 drones com falhas bizantinas, variando de 1 a 4 nós bizantinos.
+
+Neste projeto:
+
+* os cenários de crash, omissão e temporização foram simulados com Raft;
+* os cenários bizantinos foram simulados com PBFT;
+* o LSP foi implementado como experimento complementar para falhas bizantinas.
+
+---
+
+# 1. Cenário com 5 drones e falhas crash/omissão/temporização
+
+## Gerar os comandos
+
+No terminal normal:
+
+```bash
+python3 gerar_raft.py 5
+```
+
+## Iniciar o Mininet
+
+```bash
+sudo mn -c
+sudo PYTHONPATH=/home/sergio_nunes/Documentos/GitHub/Sistemas-Distribuidos/mininet-src python3 topology.py
+```
+
+## Subir os drones
+
+Dentro do Mininet:
+
+```bash
+source comandos_raft_auto.txt
+```
+
+Aguardar alguns segundos até que um líder seja eleito.
+
+## Verificar o estado da rede
+
+```bash
+source teste_raft_auto.txt
+```
+
+O resultado esperado é a eleição de um líder, indicada por mensagens como:
+
+```text
+VIROU LÍDER
+heartbeat de droneX
+```
+
+## Simular falhas
+
+Para simular falha de crash, omissão ou temporização, alguns drones são removidos da rede.
+
+### Falha em 1 nó
+
+```bash
+h3 pkill -f "drone.py drone3"
+```
+
+### Falha em 2 nós
+
+```bash
+h3 pkill -f "drone.py drone3"
+h4 pkill -f "drone.py drone4"
+```
+
+### Falha em 3 nós
+
+```bash
+h3 pkill -f "drone.py drone3"
+h4 pkill -f "drone.py drone4"
+h5 pkill -f "drone.py drone5"
+```
+
+Após cada teste:
+
+```bash
+source teste_raft_auto.txt
+```
+
+Resultado esperado:
+
+* com maioria ativa, o sistema continua funcionando;
+* se o líder falhar, outro drone pode iniciar eleição;
+* se não houver quórum suficiente, o consenso deixa de ser garantido.
+
+---
+
+# 2. Cenário com 10 drones e falhas crash/omissão/temporização
+
+## Gerar os comandos
+
+```bash
+python3 gerar_raft.py 10
+```
+
+## Iniciar o Mininet
+
+```bash
+sudo mn -c
+sudo PYTHONPATH=/home/sergio_nunes/Documentos/GitHub/Sistemas-Distribuidos/mininet-src python3 topology.py
+```
+
+## Subir os drones
+
+Dentro do Mininet:
+
+```bash
+source comandos_raft_auto.txt
+```
+
+Aguardar a eleição do líder.
+
+## Verificar a rede
+
+```bash
+source teste_raft_auto.txt
+```
+
+## Simular falhas de 1 a 6 nós
+
+### Falha em 1 nó
+
+```bash
+h3 pkill -f "drone.py drone3"
+```
+
+### Falha em 2 nós
+
+```bash
+h3 pkill -f "drone.py drone3"
+h4 pkill -f "drone.py drone4"
+```
+
+### Falha em 3 nós
+
+```bash
+h3 pkill -f "drone.py drone3"
+h4 pkill -f "drone.py drone4"
+h5 pkill -f "drone.py drone5"
+```
+
+### Falha em 4 nós
+
+```bash
+h3 pkill -f "drone.py drone3"
+h4 pkill -f "drone.py drone4"
+h5 pkill -f "drone.py drone5"
+h6 pkill -f "drone.py drone6"
+```
+
+### Falha em 5 nós
+
+```bash
+h3 pkill -f "drone.py drone3"
+h4 pkill -f "drone.py drone4"
+h5 pkill -f "drone.py drone5"
+h6 pkill -f "drone.py drone6"
+h7 pkill -f "drone.py drone7"
+```
+
+### Falha em 6 nós
+
+```bash
+h3 pkill -f "drone.py drone3"
+h4 pkill -f "drone.py drone4"
+h5 pkill -f "drone.py drone5"
+h6 pkill -f "drone.py drone6"
+h7 pkill -f "drone.py drone7"
+h8 pkill -f "drone.py drone8"
+```
+
+Após cada teste:
+
+```bash
+source teste_raft_auto.txt
+```
+
+Resultado esperado:
+
+* até certo limite, o Raft mantém o funcionamento por maioria;
+* com perda de maioria, a rede não consegue manter consenso estável.
+
+---
+
+# 3. Cenário com 5 drones e falhas bizantinas
+
+Para falhas bizantinas foi utilizado o PBFT.
+
+## 5 drones com 1 nó bizantino
+
+No terminal normal:
+
+```bash
+sudo mn -c
+python3 gerar_bft.py 5 3
+sudo PYTHONPATH=/home/sergio_nunes/Documentos/GitHub/Sistemas-Distribuidos/mininet-src python3 topology.py
+```
+
+Dentro do Mininet:
+
+```bash
+source comandos_bft_auto.txt
+```
+
+Iniciar consenso:
+
+```bash
+h1 curl http://10.0.0.1:5001/start_bft
+```
+
+Consultar drones honestos:
+
+```bash
+h2 curl http://10.0.0.2:5002
+h4 curl http://10.0.0.4:5004
+h5 curl http://10.0.0.5:5005
 ```
 
 Resultado esperado:
 
 ```text
-*** Results: 0% dropped
+DECIDIU valor final: leader=drone1
 ```
 
----
+ou:
 
-# Algoritmo 1 – Raft
-
-Arquivo:
-
-```text
-drone.py
+```json
+"decided_value":"leader=drone1"
 ```
 
-Objetivo:
-
-* Eleição de líder
-* Tolerância a falhas de crash
-* Tolerância a falhas de omissão
-* Tolerância a falhas de temporização
-
-Exemplo:
+## 5 drones com 2 nós bizantinos
 
 ```bash
-python3 drone.py drone1 5001
+sudo mn -c
+python3 gerar_bft.py 5 3,4
+sudo PYTHONPATH=/home/sergio_nunes/Documentos/GitHub/Sistemas-Distribuidos/mininet-src python3 topology.py
 ```
-
----
-
-# Algoritmo 2 – BFT/PBFT
-
-Arquivo:
-
-```text
-bft_drone.py
-```
-
-Objetivo:
-
-* Consenso Bizantino
-* Fases PRE-PREPARE
-* PREPARE
-* COMMIT
-
----
-
-## Gerar Cenário
-
-Exemplo:
-
-```bash
-python3 gerar_bft.py 10 3
-```
-
-Resultado:
-
-```text
-10 drones
-1 bizantino (drone3)
-```
-
-Arquivo gerado:
-
-```text
-comandos_bft_auto.txt
-```
-
----
-
-## Executar Cenário
 
 Dentro do Mininet:
 
-```text
+```bash
 source comandos_bft_auto.txt
+h1 curl http://10.0.0.1:5001/start_bft
+h2 curl http://10.0.0.2:5002
+h5 curl http://10.0.0.5:5005
 ```
+
+Resultado esperado:
+
+```text
+Consenso não garantido
+```
+
+Isso ocorre porque, para tolerar 2 bizantinos, seriam necessários pelo menos 7 participantes.
 
 ---
 
-## Executar Teste
+# 4. Cenário com 10 drones e falhas bizantinas
 
-```text
+## 10 drones com 1 nó bizantino
+
+```bash
+sudo mn -c
+python3 gerar_bft.py 10 3
+sudo PYTHONPATH=/home/sergio_nunes/Documentos/GitHub/Sistemas-Distribuidos/mininet-src python3 topology.py
+```
+
+Dentro do Mininet:
+
+```bash
+source comandos_bft_auto.txt
 source teste_bft_10.txt
 ```
 
----
-
-## Regra de Tolerância
-
-Para tolerar m nós bizantinos:
+Resultado esperado:
 
 ```text
-N ≥ 3m + 1
+DECIDIU valor final: leader=drone1
 ```
 
-Exemplos:
-
-```text
-1 bizantino -> mínimo 4 nós
-2 bizantinos -> mínimo 7 nós
-3 bizantinos -> mínimo 10 nós
-```
-
----
-
-# Algoritmo 3 – Lamport-Shostak-Pease
-
-Arquivo:
-
-```text
-lsp_drone.py
-```
-
-Objetivo:
-
-Resolver o problema dos Generais Bizantinos utilizando votação majoritária.
-
----
-
-## Gerar Cenário
-
-Exemplo:
+## 10 drones com 2 nós bizantinos
 
 ```bash
-python3 gerar_lsp.py 10 3
+sudo mn -c
+python3 gerar_bft.py 10 3,4
+sudo PYTHONPATH=/home/sergio_nunes/Documentos/GitHub/Sistemas-Distribuidos/mininet-src python3 topology.py
 ```
-
-Resultado:
-
-```text
-Drones: 10
-Bizantinos: [3]
-```
-
-Arquivo gerado:
-
-```text
-comandos_lsp_auto.txt
-```
-
----
-
-## Executar Cenário
 
 Dentro do Mininet:
 
-```text
-source comandos_lsp_auto.txt
+```bash
+source comandos_bft_auto.txt
+source teste_bft_10.txt
 ```
+
+Resultado esperado:
+
+```text
+DECIDIU valor final: leader=drone1
+```
+
+## 10 drones com 3 nós bizantinos
+
+```bash
+sudo mn -c
+python3 gerar_bft.py 10 3,4,5
+sudo PYTHONPATH=/home/sergio_nunes/Documentos/GitHub/Sistemas-Distribuidos/mininet-src python3 topology.py
+```
+
+Dentro do Mininet:
+
+```bash
+source comandos_bft_auto.txt
+source teste_bft_10.txt
+```
+
+Resultado esperado:
+
+```text
+QUORUM PREPARE atingido
+DECIDIU valor final: leader=drone1
+```
+
+## 10 drones com 4 nós bizantinos
+
+```bash
+sudo mn -c
+python3 gerar_bft.py 10 3,4,5,6
+sudo PYTHONPATH=/home/sergio_nunes/Documentos/GitHub/Sistemas-Distribuidos/mininet-src python3 topology.py
+```
+
+Dentro do Mininet:
+
+```bash
+source comandos_bft_auto.txt
+source teste_bft_10.txt
+```
+
+Resultado esperado:
+
+```json
+"decided_value": null
+```
+
+ou:
+
+```text
+Consenso não garantido
+```
+
+Esse cenário ultrapassa o limite teórico do PBFT.
 
 ---
 
-## Executar Teste
+# 5. Cenários Complementares com Lamport-Shostak-Pease
 
-```text
+O LSP foi utilizado como implementação complementar para demonstrar votação majoritária diante de falhas bizantinas.
+
+## 10 drones com 1 bizantino
+
+```bash
+sudo mn -c
+python3 gerar_lsp.py 10 3
+sudo PYTHONPATH=/home/sergio_nunes/Documentos/GitHub/Sistemas-Distribuidos/mininet-src python3 topology.py
+```
+
+Dentro do Mininet:
+
+```bash
+source comandos_lsp_auto.txt
 source teste_lsp_10.txt
 ```
 
----
-
-## Exemplo de Resultado
-
-Drone bizantino:
+Resultado esperado:
 
 ```text
-drone3 -> leader=fake_drone3
+leader=drone1
 ```
 
-Resultado final:
+## 10 drones com 2 bizantinos
 
-```json
-{
-  "decided_value": "leader=drone1",
-  "votes": {
-    "leader=drone1": 8,
-    "leader=fake_drone3": 1
-  }
-}
+```bash
+sudo mn -c
+python3 gerar_lsp.py 10 3,4
+sudo PYTHONPATH=/home/sergio_nunes/Documentos/GitHub/Sistemas-Distribuidos/mininet-src python3 topology.py
 ```
 
-Decisão correta:
+Dentro do Mininet:
+
+```bash
+source comandos_lsp_auto.txt
+source teste_lsp_10.txt
+```
+
+Resultado esperado:
 
 ```text
 leader=drone1
@@ -312,77 +498,40 @@ leader=drone1
 
 ---
 
-# Cenários Testados
+# Resumo dos Resultados Esperados
 
-## BFT
-
-### Cenário 1
-
-```text
-5 drones
-1 bizantino
-```
-
-### Cenário 2
-
-```text
-10 drones
-1 bizantino
-```
-
-### Cenário 3
-
-```text
-10 drones
-3 bizantinos
-```
-
-### Cenário 4
-
-```text
-10 drones
-4 bizantinos
-```
-
-Resultado esperado:
-
-```text
-Violação da condição N ≥ 3m + 1
-```
+| Cenário                                  | Algoritmo | Resultado esperado                       |
+| ---------------------------------------- | --------- | ---------------------------------------- |
+| 5 drones com crash/omissão/temporização  | Raft      | Consenso mantido enquanto houver maioria |
+| 10 drones com crash/omissão/temporização | Raft      | Consenso mantido enquanto houver maioria |
+| 5 drones com 1 bizantino                 | PBFT      | Consenso mantido                         |
+| 5 drones com 2 bizantinos                | PBFT      | Consenso não garantido                   |
+| 10 drones com 1 bizantino                | PBFT      | Consenso mantido                         |
+| 10 drones com 2 bizantinos               | PBFT      | Consenso mantido                         |
+| 10 drones com 3 bizantinos               | PBFT      | Consenso mantido                         |
+| 10 drones com 4 bizantinos               | PBFT      | Consenso não garantido                   |
+| 10 drones com 1 bizantino                | LSP       | Consenso mantido                         |
+| 10 drones com 2 bizantinos               | LSP       | Consenso mantido                         |
 
 ---
 
-## Lamport-Shostak-Pease
+# Observações Finais
 
-### Cenário 1
+O Raft utiliza maioria simples para manter consenso. Portanto, enquanto mais da metade dos drones permanecer ativa, o sistema tende a continuar operando.
 
-```text
-10 drones
-1 bizantino
-```
-
-Resultado:
+O PBFT utiliza a condição:
 
 ```text
-Consenso alcançado
+N >= 3m + 1
 ```
 
----
+onde `N` é o número total de drones e `m` é o número máximo de participantes bizantinos.
 
-# Limpeza do Ambiente
+Assim:
 
-Antes de iniciar novos testes:
-
-```bash
-sudo mn -c
+```text
+10 drones toleram até 3 bizantinos.
+5 drones toleram até 1 bizantino.
 ```
 
----
-
-# Autor
-
-Sergio Nunes
-
-Curso de Ciência da Computação – UECE
-
-Disciplina: Sistemas Distribuídos
+O Lamport-Shostak-Pease foi usado como complemento para mostrar consenso por votação majoritária em cenários bizantinos.

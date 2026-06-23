@@ -45,9 +45,18 @@ votes = 0
 last_heartbeat = time.time()
 current_term = 0
 
+
 @app.route("/", methods=["GET"])
 def home():
-    return f"{DRONE_ID} rodando!"
+    return jsonify({
+        "drone": DRONE_ID,
+        "state": state,
+        "term": current_term,
+        "voted_for": voted_for,
+        "nodes": len(NODES)
+    })
+
+
 
 @app.route("/vote", methods=["POST"])
 def vote():
@@ -61,7 +70,8 @@ def vote():
     candidate = data["candidate"]
     term = data["term"]
 
-    # falha por omissão
+    print(f"[{DRONE_ID}] recebeu pedido de voto de {candidate}")
+
     if FAILURE_MODE == "omission":
         if random.random() < FAILURE_RATE:
             print(f"[{DRONE_ID}] OMITIU voto")
@@ -70,18 +80,15 @@ def vote():
                 "term": current_term
             })
 
-    # falha por delay
     if FAILURE_MODE == "delay":
         print(f"[{DRONE_ID}] atrasando voto...")
         time.sleep(3)
 
-    # atualiza termo
     if term > current_term:
         current_term = term
         voted_for = None
         state = "follower"
 
-    # concede voto
     if voted_for is None or voted_for == candidate:
         voted_for = candidate
         last_heartbeat = time.time()
@@ -93,11 +100,13 @@ def vote():
             "term": current_term
         })
 
-    # rejeita voto
+    print(f"[{DRONE_ID}] rejeitou voto para {candidate}. Já votou em {voted_for}")
+
     return jsonify({
         "vote_granted": False,
         "term": current_term
     })
+
 
 
 
@@ -119,6 +128,7 @@ def start_election():
     print(f"[{DRONE_ID}] iniciou eleição (term {current_term})")
 
     for node in NODES:
+        print(f"[{DRONE_ID}] pedindo voto para {node}")
         try:
             res = requests.post(
                 f"{node}/vote",
@@ -129,6 +139,9 @@ def start_election():
 
             if data.get("vote_granted") == True:
                 votes += 1
+                print(f"[{DRONE_ID}] recebeu voto de {node}")
+            else:
+                print(f"[{DRONE_ID}] voto negado por {node}")    
 
         except:
             pass
@@ -221,17 +234,18 @@ def send_heartbeat():
                         fake_leader = f"fake_{DRONE_ID}"
                         requests.post(
                             f"{node}/heartbeat",
-                            json={"leader": fake_leader, "term": current_term}
+                            json={"leader": fake_leader, "term": current_term},
+                            timeout=1
                         )
                     else:
                         requests.post(
                             f"{node}/heartbeat",
-                            json={"leader": DRONE_ID, "term": current_term}
+                            json={"leader": DRONE_ID, "term": current_term},
+                            timeout=1
                         )
                 except:
                     pass
         time.sleep(1)
-
 
 
 def simulate_failure():

@@ -1,0 +1,11 @@
+h1 curl http://10.0.0.1:6001/start_lsp
+h2 curl http://10.0.0.2:6002/broadcast_lsp
+h3 curl http://10.0.0.3:6003/broadcast_lsp
+h4 curl http://10.0.0.4:6004/broadcast_lsp
+h5 curl http://10.0.0.5:6005/broadcast_lsp
+h6 curl http://10.0.0.6:6006/broadcast_lsp
+h7 curl http://10.0.0.7:6007/broadcast_lsp
+h8 curl http://10.0.0.8:6008/broadcast_lsp
+h9 curl http://10.0.0.9:6009/broadcast_lsp
+h10 curl http://10.0.0.10:6010/broadcast_lsp
+h5 curl http://10.0.0.5:6005/decide_lsp
